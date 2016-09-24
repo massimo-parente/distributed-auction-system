@@ -1,0 +1,35 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                               controllers.HomeController.index
+
+POST    /login                          controllers.HomeController.login
+
+POST    /logout                         controllers.HomeController.logout
+
+POST    /start-auction                  controllers.HomeController.startAuction
+
+GET     /ws                             controllers.HomeController.ws
+
+POST    /users/add                      controllers.HomeController.addUser()
+
+PUT     /users/update/:name/:role/:budget  controllers.HomeController.updateUser(name: String, role: String, budget: Int)
+
+DELETE  /users/delete/:name             controllers.HomeController.deleteUser(name: String)
+
+GET     /users                          controllers.HomeController.getUsers()
+
+GET     /users/:name                    controllers.HomeController.getUser(name: String)
+
+GET     /teams                          controllers.HomeController.getTeams()
+
+GET     /players/:team                  controllers.HomeController.getPlayers(team: String)
+
+GET     /players                        controllers.HomeController.getAllPlayers()
+
+POST    /load-players                   controllers.HomeController.loadPlayers()
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)
