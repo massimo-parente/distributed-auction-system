@@ -8,41 +8,36 @@ import "rxjs/add/operator/do"
 export class AuthService {
 
     private loggedIn = false
+    private user = {name: "", role: ""}
 
-    constructor(private http: Http) {
-        this.loggedIn = !!localStorage.getItem("username")
-    }
+    constructor(private http: Http) {}
 
-    // store the URL so we can redirect after logging in
     redirectUrl: string;
 
     login(username: string) {
         console.log("Logging in: " + username)
         let headers = new Headers()
-
         headers.append("Content-Type", "application/json")
-
         return this.http
             .post("/login", JSON.stringify({username}), {headers})
             .map((res:any) => {
-                localStorage.setItem("username", username)
+                let js = res.json()
+                this.user= {name: js.name, role: js.role}
                 this.loggedIn = true
-                return res.ok
+                res.ok
             })
     }
 
     logout() {
         console.log("Logging out")
         let headers = new Headers()
-
         headers.append("Content-Type", "application/json")
-
         return this.http
             .post("/logout", JSON.stringify(""), {headers})
             .map((res:any) => {
-                localStorage.removeItem("username")
+                localStorage.removeItem("user")
                 this.loggedIn = false
-                return res.ok
+                res.ok
             })
     }
 
@@ -52,6 +47,6 @@ export class AuthService {
     }
 
     loggedUser() {
-        return localStorage.getItem("username")
+        return this.user
     }
 }

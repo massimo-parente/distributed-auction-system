@@ -7,24 +7,19 @@ import {WebSocketService} from "./websocket.service"
 @Injectable()
 export class AuctionService {
 
-    auctionStatus = ""
-    auctioneer = ""
-    highestBid = {
-        bidder: "",
-        player: "",
-        value: 0
-    }
-    pendingBidders = new Array<string>()
-
+    private auctionStatus = ""
+    private auctioneer = ""
+    private highestBid = {bidder: "", player: "", value: 0}
+    private pendingBidders = new Array<string>()
     private messages = new Array<any>();
 
     constructor(private webSocketService: WebSocketService, private http: Http) {
-        this.webSocketService.messages.subscribe((msg: any) => this.handle(msg));
+        this.webSocketService.messages
+            .subscribe((msg: any) => this.handle(msg));
     }
 
     handle(msg: any) {
         switch(msg.messageType) {
-
             case "subscribed":
                 this.pushMessage(msg.user + " has joined the auction")
                 break
@@ -40,16 +35,11 @@ export class AuctionService {
                 this.auctioneer = msg.auctioneer
                 break
             case "auction-requested":
-                this.pushMessage(msg.sender + " has requested an auction for " + msg.player)
+                this.pushMessage(msg.auctioneer + " has requested an auction for " + msg.player)
                 this.pushMessage("All bidders must join the auction")
                 this.auctionStatus = msg.messageType
-                this.highestBid = {
-                    bidder: msg.auctioneer,
-                    player: msg.player,
-                    value: 1
-                }
+                this.highestBid = {bidder: msg.auctioneer, player: msg.player, value: 1}
                 this.pendingBidders = msg.pendingBidders
-                console.log(JSON.stringify(msg))
                 break
             case "auction-joined":
                 this.pushMessage(msg.sender + " has joined the auction for " + msg.player)
@@ -59,13 +49,13 @@ export class AuctionService {
                 this.auctionStatus = msg.messageType
                 break
             case "bid-accepted":
-                this.pushMessage(msg.bid.player + " bids " + msg.bid.value + " for " + msg.bid.player)
+                this.pushMessage(msg.bid.bidder + " bids " + msg.bid.value + " for " + msg.bid.player)
                 break
             case "bid-rejected":
                 this.pushMessage(
                     msg.bid.bidder + " bid of " +
                     msg.bid.value + " for " +
-                    msg.bid.player + " has been rejected. Reason: " +
+                    msg.bid.player + " has been rejected. " +
                     msg.reason
                 )
                 break
@@ -116,7 +106,7 @@ export class AuctionService {
 
     pushMessage(msg: string) {
         this.messages.push(msg);
-        if (this.messages.length > 50) {
+        if (this.messages.length > 20) {
             this.messages.shift()
         }
     }

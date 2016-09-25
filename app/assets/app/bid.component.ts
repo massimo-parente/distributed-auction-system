@@ -52,18 +52,20 @@ export class BidComponent implements OnInit {
     ) { }
 
     ngOnInit() {
+        console.log("fetching players")
         this.playersService.getPlayers()
             .subscribe((players) => this.players = players)
     }
 
     canRequestAuction() {
-        return this.auctionService.getAuctioneer() == this.authService.loggedUser() &&
+        return this.auctionService.getAuctioneer() == this.authService.loggedUser().name &&
             this.auctionService.getAuctionStatus() == "auction-initialised"
     }
 
     userJoined() {
         let pendingBidders = this.auctionService.getPendingBidders()
-        let loggedUser = this.authService.loggedUser()
+        let loggedUser = this.authService.loggedUser().name
+        console.log("aa " + loggedUser)
         return pendingBidders.indexOf(loggedUser) > -1
     }
 
@@ -81,7 +83,7 @@ export class BidComponent implements OnInit {
 
     requestAuction() {
         let bid = {
-            auctioneer: this.authService.loggedUser(),
+            auctioneer: this.authService.loggedUser().name,
             player: this.player,
             messageType: "call-auction"
         }
@@ -90,7 +92,7 @@ export class BidComponent implements OnInit {
 
     joinAuction() {
         let message = {
-            bidder: this.authService.loggedUser(),
+            bidder: this.authService.loggedUser().name,
             player: this.auctionService.getHighestBid().player,
             messageType: "join-auction"
         }
@@ -99,7 +101,7 @@ export class BidComponent implements OnInit {
 
     bid() {
         let bid = {
-            bidder: this.authService.loggedUser(),
+            bidder: this.authService.loggedUser().name,
             player: this.auctionService.getHighestBid().player,
             value: this.value,
             messageType: "bid"

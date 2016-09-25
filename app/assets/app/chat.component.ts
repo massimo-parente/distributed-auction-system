@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
 import {WebSocketService} from "./websocket.service";
+import {AuthService} from "./auth.service";
 
 @Component({
     selector: 'chat',
@@ -19,14 +20,17 @@ export class ChatComponent {
 
     chatMessage: string;
 
-    constructor(private webSocketService: WebSocketService) { }
+    constructor(
+        private webSocketService: WebSocketService,
+        private authService: AuthService
+    ) { }
 
     sendMessage() {
 
         console.log("sending message")
         let message = {
             messageType: "chat",
-            sender: localStorage.getItem("username"),
+            sender: this.authService.loggedUser().name,
             message: this.chatMessage
         }
 

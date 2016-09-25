@@ -5,14 +5,16 @@ import {AuthService} from "./auth.service";
 @Component({
     selector: 'admin',
     template: `
-        <div class="panel panel-primary">
+        <div class="panel panel-primary" *ngIf="showPanel()">
             <div class="panel-heading">Admin</div>
             <div class="panel-body">
-                <div class="form-group">                    
-                    <button type="button" class="btn btn-primary" (click)="startAuction()">Start Auction</button>
-                </div>
-                <div class="form-group">                    
-                    <button type="button" class="btn btn-primary" (click)="abortAuction()">Abort Auction</button>
+                <div class="row">
+                    <div class="col-md-4">                    
+                        <button type="button" class="btn btn-primary" (click)="startAuction()">Start Auction</button>
+                    </div>
+                    <div class="col-md-4">                    
+                        <button type="button" class="btn btn-primary" (click)="abortAuction()">Abort Auction</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -30,4 +32,7 @@ export class AdminComponent {
         this.auctionService.abortAuction().subscribe(() => {})
     }
 
+    showPanel() {
+        return this.authService.loggedUser().role == "admin"
+    }
 }

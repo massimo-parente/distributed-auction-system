@@ -32,8 +32,8 @@ class DatabaseConfig @Inject()(dbConfigProvider: DatabaseConfigProvider) {
       DBIO.seq(
         users.schema.create,
         players.schema.create,
-        users += User("max", UserRoles.ADMIN, 0),
-        users += User("gino", UserRoles.BIDDER, 0)
+        users += User("max", UserRoles.ADMIN, 100),
+        users += User("gino", UserRoles.BIDDER, 100)
       )
     )
   }
