@@ -29,6 +29,7 @@ object AuctionControllerActor {
   case class Subscribe(name: String)
   case class UnSubscribe(name: String)
   case object InitAuction
+  case object AbortAuction
   case class Tick(sender: ActorRef)
   case object GetStatus
 
@@ -61,8 +62,8 @@ object AuctionControllerActor {
   case class Chat(sender: String, message: String, messageType: String = CHAT) extends AuctionMessage
   // outbound
   case class AuctionInitialised(auctioneer: String, messageType: String = AUCTION_INITIALISED) extends AuctionMessage
-  case class AuctionRequested(auctioneer: String, player: String, messageType: String = AUCTION_REQUESTED) extends AuctionMessage
-  case class AuctionJoined(bidder: String, messageType: String = AUCTION_JOINED) extends AuctionMessage
+  case class AuctionRequested(auctioneer: String, player: String, pendingBidders: Seq[String], messageType: String = AUCTION_REQUESTED) extends AuctionMessage
+  case class AuctionJoined(bidder: String, pendingBidders: Seq[String], messageType: String = AUCTION_JOINED) extends AuctionMessage
   case class AuctionOpened(player: String, messageType: String = AUCTION_OPENED) extends AuctionMessage
   case class BidAccepted(bid: Bid, messageType: String = BID_ACCEPTED) extends AuctionMessage
   case class BidRejected(bid: Bid, reason: String, messageType: String = BID_REJECTED) extends AuctionMessage
@@ -93,7 +94,8 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
       getUserNames(sender()) pipeTo self
       stay()
     case Event(ResolveUserNames(sender, users), data) =>
-      val newData = data.copy(auctioneers = users)
+      val auctioneers = users.filter(_ => true)
+      val newData = data.copy(auctioneers = auctioneers)
       broadcast(AuctionInitialised(users(0)))
       goto(AwaitingCall) using (newData)
   }
@@ -102,24 +104,25 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
     case Event(CallAuction(auctioneer, player, _), data) =>
       log.info("{} has called an auction on {}", auctioneer, player)
       val bid = Bid(auctioneer, player, 1)
-      val newData = data.copy(pendingBidders = data.auctioneers, currentBid = bid)
-      broadcast(AuctionRequested(auctioneer, player))
+      val pendingBidders = data.auctioneers.filter(a => !a.equals(auctioneer))
+      val newData = data.copy(pendingBidders = pendingBidders, currentBid = bid)
+      broadcast(AuctionRequested(auctioneer, player, pendingBidders))
       goto(AwaitingBidders) using (newData)
   }
 
   when(AwaitingBidders) {
     case Event(JoinAuction(bidder, player, _), data) =>
       log.info("{} is joining the auction", bidder)
-      broadcast(AuctionJoined(bidder))
       val bidders = data.pendingBidders.filterNot(_.equals(bidder))
       if (bidders.isEmpty) {
         log.info("All bidders have joined. GAME ON!!!")
+        broadcast(AuctionOpened(player))
         val scheduler = startCounter()
         val newData = data.copy(pendingBidders = bidders, scheduler = scheduler)
-        broadcast(AuctionOpened(player))
         goto(InProgress) using (newData)
       } else {
         log.info("More bidders to join...")
+        broadcast(AuctionJoined(bidder, bidders))
         val newData = data.copy(pendingBidders = bidders)
         stay() using (newData)
       }
@@ -142,6 +145,7 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
     case Event(Tick(sender), data) =>
       log.info("Tick {}", data.auctionCount)
       if (data.auctionCount == 3) {
+        data.scheduler.cancel()
         log.info("Auction complete!!! Wins highest bid: {}", data.currentBid)
         // complete auction
         broadcast(Ticked(data.currentBid, data.auctionCount))
@@ -171,6 +175,8 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
       broadcast(UnSubscribed(subscribers(actor)))
       subscribers -= actor
       stay()
+    case Event(AbortAuction, data) =>
+      goto(Closed) using(AuctionData(data.auctioneers))
     case Event(c@Chat(sender, message, _), _) =>
       broadcast(c)
       stay()
@@ -218,7 +224,10 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
   }
 
   def getUserNames(sender: ActorRef): Future[ResolveUserNames] = {
-    userRepo.getUserNames().map(names => ResolveUserNames(sender, names))
+    userRepo.getUserNames().map{ names =>
+      log.info(names.toString())
+      ResolveUserNames(sender, names)
+    }
   }
 
   def signPlayer(bid: Bid): Unit = {

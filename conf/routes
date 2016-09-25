@@ -11,6 +11,8 @@ POST    /logout                         controllers.HomeController.logout
 
 POST    /start-auction                  controllers.HomeController.startAuction
 
+POST    /abort-auction                  controllers.HomeController.abortAuction
+
 GET     /ws                             controllers.HomeController.ws
 
 POST    /users/add                      controllers.HomeController.addUser()

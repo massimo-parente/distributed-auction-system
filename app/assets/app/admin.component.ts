@@ -11,6 +11,9 @@ import {AuthService} from "./auth.service";
                 <div class="form-group">                    
                     <button type="button" class="btn btn-primary" (click)="startAuction()">Start Auction</button>
                 </div>
+                <div class="form-group">                    
+                    <button type="button" class="btn btn-primary" (click)="abortAuction()">Abort Auction</button>
+                </div>
             </div>
         </div>
     `
@@ -22,4 +25,9 @@ export class AdminComponent {
     startAuction() {
         this.auctionService.startAuction().subscribe(() => {})
     }
- }
+
+    abortAuction() {
+        this.auctionService.abortAuction().subscribe(() => {})
+    }
+
+}

@@ -32,6 +32,7 @@ trait PlayerRepository {
   def find(name: String): Future[Option[Player]]
   def findAll(): Future[Seq[Player]]
   def signPlayer(player: String, user: String, value: Int): Future[Int]
+  def addPlayer(player: Player): Future[Unit]
 }
 
 class PlayerRepositoryImpl @Inject()(dbConfigProvider: DatabaseConfigProvider) extends PlayerRepository {
@@ -50,6 +51,10 @@ class PlayerRepositoryImpl @Inject()(dbConfigProvider: DatabaseConfigProvider) e
     db.run(
       players.filter(_.name === player).map(p => (p.user, p.value)).update(user, value)
     )
+  }
+
+  override def addPlayer(player: Player): Future[Unit] = {
+    db.run(DBIO.seq(players += player))
   }
 
 }

@@ -90,7 +90,7 @@ class AuctionControllerActorSpec extends TestKit(ActorSystem("TestSystem"))
       assert(actor.stateData.auctioneers == Seq("user1", "user2", "user3"))
 
       actor ! CallAuction("user1", "player1")
-      expectMsg(AuctionRequested("user1", "player1"))
+      expectMsg(AuctionRequested("user1", "player1", Seq("user1", "user2", "user3")))
       assert(actor.stateName == AwaitingBidders)
       assert(actor.stateData.pendingBidders.size == 3)
 

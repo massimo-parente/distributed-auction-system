@@ -2,12 +2,12 @@ package controllers
 
 import javax.inject.{Inject, Named}
 
-import actors.AuctionControllerActor.InitAuction
+import actors.AuctionControllerActor.{AbortAuction, InitAuction}
 import actors.WebSocketActor
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
 import config.DatabaseConfig
-import models.{Player, User}
+import models.{Player, PlayerRepository, User}
 import play.api.libs.json._
 import play.api.libs.streams.ActorFlow
 import play.api.mvc._
@@ -17,7 +17,9 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 
-class HomeController @Inject()(@Named("auctionControllerActor") auctionControllerActor: ActorRef, dbConfig: DatabaseConfig)
+class HomeController @Inject()(@Named("auctionControllerActor") auctionControllerActor: ActorRef,
+                               dbConfig: DatabaseConfig,
+                               playerRepo: PlayerRepository)
                               (implicit system: ActorSystem, materializer: Materializer) extends Controller {
 
   private val logger = org.slf4j.LoggerFactory.getLogger("controllers.Application")
@@ -69,6 +71,12 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
     logger.info("Starting auction")
     auctionControllerActor ! InitAuction
     Ok(Json.obj("success" -> "Auction started"))
+  }
+
+  def abortAuction = Action {
+    logger.info("Aborting auction")
+    auctionControllerActor ! AbortAuction
+    Ok(Json.obj("success" -> "Auction aborted"))
   }
 
   def addUser() = Action.async(BodyParsers.parse.json) { implicit request =>
@@ -126,7 +134,7 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
     val bufferedSource = Source.fromString(payload)
     for (line <- bufferedSource.getLines) {
       val cols = line.split(",").map(_.trim)
-      //db.run(players += Player(cols(0), cols(1), 0, "max"))
+      playerRepo.addPlayer(new Player(cols(0), cols(1), 0, cols(2), "max"))
       //println(s"${cols(0)}|${cols(1)}|${cols(2)}}")
     }
     bufferedSource.close

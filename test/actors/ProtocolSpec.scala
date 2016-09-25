@@ -1,5 +1,7 @@
 package actors
 
+import actors.AuctionControllerActor._
+import actors.WebSocketActor._
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import org.scalatestplus.play.OneAppPerSuite
 import play.api.libs.json.Json
@@ -20,10 +22,14 @@ class ProtocolSpec extends FlatSpec
     val bid = Bid("user1", "player1", 10)
     val chat = Chat("user1", "abc")
 
-    assert(call.equals(Json.toJson(call).as[AuctionMessage]))
-    assert(join.equals(Json.toJson(join).as[AuctionMessage]))
-    assert(bid.equals(Json.toJson(bid).as[AuctionMessage]))
-    assert(chat.equals(Json.toJson(chat).as[AuctionMessage]))
+    val json = """{"bidder":"max","player":"Alisson","value":"1","messageType":"bid"}"""
+    val js = Json.parse(json)
+    val b = js.as[Bid]
+    println(b)
+//    assert(call.equals(Json.toJson(call).as[AuctionMessage]))
+//    assert(join.equals(Json.toJson(join).as[AuctionMessage]))
+//    assert(bid.equals(Json.toJson(bid).as[AuctionMessage]))
+//    assert(chat.equals(Json.toJson(chat).as[AuctionMessage]))
   }
 
 

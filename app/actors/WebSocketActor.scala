@@ -6,6 +6,7 @@ import akka.event.LoggingReceive
 import akka.actor.ActorRef
 import akka.actor.Props
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 import AuctionControllerActor._
 
 object WebSocketActor {
@@ -14,9 +15,17 @@ object WebSocketActor {
     Props(new WebSocketActor(uid, auctionControllerActor, out))
   }
 
+  implicit val bidReads: Reads[Bid] = (
+    (__ \ "bidder").read[String] and
+    (__ \ "player").read[String] and
+    (__ \ "value").read[String].map(_.toInt) and
+    (__ \ "messageType").read[String]
+  )(Bid)
+  implicit val bidWrites = Json.writes[Bid]
+  implicit val bidFormat = Format(bidReads, bidWrites)
+
   implicit val callAuctionFormat = Json.format[CallAuction]
   implicit val joinAuctionFormat = Json.format[JoinAuction]
-  implicit val bidFormat = Json.format[Bid]
   implicit val chatFormat = Json.format[Chat]
   implicit val auctionInitialisedFormat = Json.format[AuctionInitialised]
   implicit val auctionRequestedFormat = Json.format[AuctionRequested]

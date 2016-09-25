@@ -23,7 +23,7 @@ export class AuthService {
         headers.append("Content-Type", "application/json")
 
         return this.http
-            .post("http://localhost:9000/login", JSON.stringify({username}), {headers})
+            .post("/login", JSON.stringify({username}), {headers})
             .map((res:any) => {
                 localStorage.setItem("username", username)
                 this.loggedIn = true
@@ -38,7 +38,7 @@ export class AuthService {
         headers.append("Content-Type", "application/json")
 
         return this.http
-            .post("http://localhost:9000/logout", JSON.stringify(""), {headers})
+            .post("/logout", JSON.stringify(""), {headers})
             .map((res:any) => {
                 localStorage.removeItem("username")
                 this.loggedIn = false
