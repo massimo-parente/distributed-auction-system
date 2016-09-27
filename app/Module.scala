@@ -1,5 +1,5 @@
 import com.google.inject.AbstractModule
-import models.{PlayerRepository, PlayerRepositoryImpl, UserRepository, UserRepositoryImpl}
+import models._
 import play.api.libs.concurrent.AkkaGuiceSupport
 
 class Module extends AbstractModule with AkkaGuiceSupport {
@@ -9,6 +9,7 @@ class Module extends AbstractModule with AkkaGuiceSupport {
   override def configure(): Unit = Seq(
     bindActor[AuctionControllerActor]("auctionControllerActor"),
     bind(classOf[UserRepository]).to(classOf[UserRepositoryImpl]),
-    bind(classOf[PlayerRepository]).to(classOf[PlayerRepositoryImpl])
+    bind(classOf[PlayerRepository]).to(classOf[PlayerRepositoryImpl]),
+    bind(classOf[EventRepository]).to(classOf[EventRepositoryImpl])
   )
 }

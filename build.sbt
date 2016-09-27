@@ -16,13 +16,14 @@ updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true
 libraryDependencies ++= {
 
   Seq(
-
     cache,
     ws,
+    evolutions,
 
     "com.typesafe.akka" %% "akka-actor" % "2.4.9",
     "com.typesafe.akka" %% "akka-slf4j" % "2.4.9",
     "com.typesafe.play" %% "play-slick" % "2.0.0",
+    "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
     "com.h2database" % "h2" % "1.4.192",
     "com.typesafe.akka" %% "akka-testkit" % "2.4.9" % "test",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",

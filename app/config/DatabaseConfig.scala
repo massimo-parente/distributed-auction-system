@@ -26,18 +26,18 @@ class DatabaseConfig @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   val db = dbConfigProvider.get[JdbcProfile].db
 
-  val setupFuture: Future[Unit] = {
-    logger.info("Creating database schema...")
-    db.run(
-      DBIO.seq(
-        users.schema.create,
-        players.schema.create,
-        users += User("max", UserRoles.ADMIN, 100),
-        users += User("gino", UserRoles.BIDDER, 100)
-      )
-    )
-  }
-
-  // block until database created
-  Await.result(setupFuture, Duration.Inf)
+//  val setupFuture: Future[Unit] = {
+//    logger.info("Creating database schema...")
+//    db.run(
+//      DBIO.seq(
+//        users.schema.create,
+//        players.schema.create,
+//        users += User("max", UserRoles.ADMIN, 100),
+//        users += User("gino", UserRoles.BIDDER, 100)
+//      )
+//    )
+//  }
+//
+//  // block until database created
+//  Await.result(setupFuture, Duration.Inf)
 }
