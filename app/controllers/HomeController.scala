@@ -7,7 +7,7 @@ import actors.WebSocketActor
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
 import config.DatabaseConfig
-import models.{Player, PlayerRepository, User}
+import models.{EventRepository, Player, PlayerRepository, User}
 import play.api.libs.json._
 import play.api.libs.streams.ActorFlow
 import play.api.mvc._
@@ -19,7 +19,8 @@ import scala.io.Source
 
 class HomeController @Inject()(@Named("auctionControllerActor") auctionControllerActor: ActorRef,
                                dbConfig: DatabaseConfig,
-                               playerRepo: PlayerRepository)
+                               playerRepo: PlayerRepository,
+                               eventRepo: EventRepository)
                               (implicit system: ActorSystem, materializer: Materializer) extends Controller {
 
   private val logger = org.slf4j.LoggerFactory.getLogger("controllers.Application")
@@ -77,6 +78,10 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
     logger.info("Aborting auction")
     auctionControllerActor ! AbortAuction
     Ok(Json.obj("success" -> "Auction aborted"))
+  }
+
+  def events = Action.async {
+    eventRepo.findFromLatestSavePoint().map(events => events.map(_.event)).map(payload => Ok(payload))
   }
 
   def addUser() = Action.async(BodyParsers.parse.json) { implicit request =>
