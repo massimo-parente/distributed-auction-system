@@ -65,7 +65,6 @@ export class BidComponent implements OnInit {
     userJoined() {
         let pendingBidders = this.auctionService.getPendingBidders()
         let loggedUser = this.authService.loggedUser().name
-        console.log("aa " + loggedUser)
         return pendingBidders.indexOf(loggedUser) > -1
     }
 

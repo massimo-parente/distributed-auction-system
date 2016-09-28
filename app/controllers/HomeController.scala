@@ -81,7 +81,9 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
   }
 
   def events = Action.async {
-    eventRepo.findFromLatestSavePoint().map(events => events.map(_.event)).map(payload => Ok(payload))
+    eventRepo.findFromLatestSavePoint()
+      .map(events => events.map(e => Json.toJson(e.event)))
+      .map(events => Ok(Json.toJson(events)))
   }
 
   def addUser() = Action.async(BodyParsers.parse.json) { implicit request =>

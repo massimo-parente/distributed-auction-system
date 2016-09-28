@@ -7,8 +7,8 @@ import akka.pattern.pipe
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 import models._
 import AuctionControllerActor._
@@ -17,20 +17,32 @@ import AuctionControllerActor._
 object AuctionControllerActor {
 
   sealed trait AuctionState
+
   case object Closed extends AuctionState
+
   case object AwaitingCall extends AuctionState
+
   case object AwaitingBidders extends AuctionState
+
   case object InProgress extends AuctionState
+
   case object Complete extends AuctionState
+
   case class ResolveUserNames(sender: ActorRef, users: Seq[String])
+
   case class ResolveBudget(sender: ActorRef, budget: Int)
 
   // internal messages
   case class Subscribe(name: String)
+
   case class UnSubscribe(name: String)
+
   case object InitAuction
+
   case object AbortAuction
+
   case class Tick(sender: ActorRef)
+
   case object GetStatus
 
   object MessageType {
@@ -72,17 +84,61 @@ object AuctionControllerActor {
   case class Subscribed(user: String, messageType: String = SUBSCRIBED) extends AuctionMessage
   case class UnSubscribed(user: String, messageType: String = UNSUBSCRIBED) extends AuctionMessage
   case class CommandRejected(command: AuctionMessage, reason: String, messageType: String = COMMAND_REJECTED)
-
   case class AuctionData(auctioneers: Seq[String] = Seq.empty,
                          pendingBidders: Seq[String] = Seq.empty,
                          currentBid: Bid = null,
                          scheduler: Cancellable = null,
                          auctionCount: Int = 1)
+
+  implicit val bidReads: Reads[Bid] = (
+    (__ \ "bidder").read[String] and
+      (__ \ "player").read[String] and
+      (__ \ "value").read[String].map(_.toInt) and
+      (__ \ "messageType").read[String]
+    ) (Bid)
+  implicit val bidWrites = Json.writes[Bid]
+  implicit val bidFormat = Format(bidReads, bidWrites)
+
+  implicit val callAuctionFormat = Json.format[CallAuction]
+  implicit val joinAuctionFormat = Json.format[JoinAuction]
+  implicit val chatFormat = Json.format[Chat]
+  implicit val auctionInitialisedFormat = Json.format[AuctionInitialised]
+  implicit val auctionRequestedFormat = Json.format[AuctionRequested]
+  implicit val auctionJoinedFormat = Json.format[AuctionJoined]
+  implicit val auctionOpenedFormat = Json.format[AuctionOpened]
+  implicit val bidAcceptedFormat = Json.format[BidAccepted]
+  implicit val bidRejectedFormat = Json.format[BidRejected]
+  implicit val auctionCompletedFormat = Json.format[AuctionCompleted]
+  implicit val tickedFormat = Json.format[Ticked]
+  implicit val subscribedFormat = Json.format[Subscribed]
+  implicit val unSubscribedFormat = Json.format[UnSubscribed]
+
+  implicit class AuctionMessageToJson(m: AuctionMessage) {
+    def toJson(): JsValue = m match {
+      case m: Chat => Json.toJson(m)
+      case m: AuctionInitialised => Json.toJson(m)
+      case m: AuctionRequested => Json.toJson(m)
+      case m: AuctionJoined => Json.toJson(m)
+      case m: AuctionOpened => Json.toJson(m)
+      case m: BidAccepted => Json.toJson(m)
+      case m: BidRejected => Json.toJson(m)
+      case m: Ticked => Json.toJson(m)
+      case m: AuctionCompleted => Json.toJson(m)
+      case m: Subscribed => Json.toJson(m)
+      case m: UnSubscribed => Json.toJson(m)
+      //case m: CommandRejected => Json.toJson(m)
+    }
+  }
+
 }
+
 /**
   * Created by mparente on 19/09/2016.
   */
-class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
+class AuctionControllerActor @Inject()(userRepo: UserRepository,
+                                       playerRepo: PlayerRepository,
+                                       eventRepo: EventRepository)
+                                      (implicit ec: ExecutionContext)
   extends Actor with LoggingFSM[AuctionState, AuctionData] {
 
   var subscribers: Map[ActorRef, String] = Map.empty
@@ -176,12 +232,9 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
       subscribers -= actor
       stay()
     case Event(AbortAuction, data) =>
-      goto(Closed) using(AuctionData(data.auctioneers))
+      goto(Closed) using (AuctionData(data.auctioneers))
     case Event(c@Chat(sender, message, _), _) =>
       broadcast(c)
-      stay()
-    case Event(GetStatus, data) =>
-      broadcast(data)
       stay()
     case Event(message: AuctionMessage, _) =>
       val error = s"Message $message cannot be handel in state: $stateName"
@@ -189,7 +242,18 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
       stay()
   }
 
-  def broadcast(msg: AnyRef) = {
+  def persistEvent(msg: AuctionMessage, savePoint: Boolean) = {
+    val e = models.Event(None, Json.stringify(msg.toJson()), savePoint)
+    eventRepo.add(e)
+  }
+
+  def broadcast(msg: AuctionMessage) = {
+    msg match {
+      case m: AuctionInitialised => persistEvent(m, true)
+      case m: Subscribe => // don't persist
+      case m: UnSubscribe => // don't persist
+      case other => persistEvent(other, false)
+    }
     subscribers.keySet.foreach(_ ! msg)
   }
 
@@ -211,20 +275,20 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository, playerRepo: Pla
     Right(BidAccepted(bid))
   }
 
-    def validateBudget(bid: Bid, budget: Int): Either[BidRejected, BidAccepted] = {
-      if (bid.value > budget) {
-        Left(BidRejected(bid, s"Bid amount ${bid.value} exceeds budget $budget"))
-      } else {
-        Right(BidAccepted(bid))
-      }
+  def validateBudget(bid: Bid, budget: Int): Either[BidRejected, BidAccepted] = {
+    if (bid.value > budget) {
+      Left(BidRejected(bid, s"Bid amount ${bid.value} exceeds budget $budget"))
+    } else {
+      Right(BidAccepted(bid))
     }
+  }
 
   def startCounter(): Cancellable = {
     context.system.scheduler.schedule(3 seconds, 3 seconds, self, Tick(sender()))
   }
 
   def getUserNames(sender: ActorRef): Future[ResolveUserNames] = {
-    userRepo.getUserNames().map{ names =>
+    userRepo.getUserNames().map { names =>
       log.info(names.toString())
       ResolveUserNames(sender, names)
     }

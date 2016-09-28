@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class Event(id: Option[Int], event: String, savePoint: Boolean)
 
 class Events(tag: Tag) extends Table[Event](tag, "EVENTS") {
-  def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   def event = column[String]("EVENT")
   def savePoint = column[Boolean]("SAVE_POINT")
   def * = (id.?, event, savePoint) <> (Event.tupled, Event.unapply)

@@ -3,6 +3,7 @@ import {Http, Headers, RequestOptions} from "@angular/http"
 import "rxjs/add/observable/of"
 import "rxjs/add/operator/do"
 import {WebSocketService} from "./websocket.service"
+import {EvenSourcingService} from "./event-sourcing.service";
 
 @Injectable()
 export class AuctionService {
@@ -13,9 +14,16 @@ export class AuctionService {
     private pendingBidders = new Array<string>()
     private messages = new Array<any>();
 
-    constructor(private webSocketService: WebSocketService, private http: Http) {
-        this.webSocketService.messages
-            .subscribe((msg: any) => this.handle(msg));
+    constructor(
+        private webSocketService: WebSocketService,
+        private eventSourcingService: EvenSourcingService,
+        private http: Http) {
+
+        this.eventSourcingService.getEvent().subscribe(
+            events => events.forEach(e => this.handle(JSON.parse(e))),
+            err => console.log(err),
+            () => this.webSocketService.messages.subscribe((msg: any) => this.handle(msg))
+        )
     }
 
     handle(msg: any) {

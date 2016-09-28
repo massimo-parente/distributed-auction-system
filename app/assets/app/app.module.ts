@@ -21,11 +21,12 @@ import {LoginComponent} from "./login.component"
 import {PlayersComponent} from "./players.component"
 import {SpinnerComponent} from "./spinner.component"
 import {AuctionService} from "./auction.service"
-import {AdminComponent} from "./admin.component";
-import {TeamsService} from "./teams.service";
-import {TeamsComponent} from "./teams.component";
-import {PlayersService} from "./players.service";
-import {UserDetailsComponent} from "./user-details.component";
+import {AdminComponent} from "./admin.component"
+import {TeamsService} from "./teams.service"
+import {TeamsComponent} from "./teams.component"
+import {PlayersService} from "./players.service"
+import {UserDetailsComponent} from "./user-details.component"
+import {EvenSourcingService} from "./event-sourcing.service"
 
 @NgModule({
     imports: [BrowserModule, FormsModule, HttpModule, JsonpModule, routing],
@@ -33,7 +34,9 @@ import {UserDetailsComponent} from "./user-details.component";
         AppComponent, NavbarComponent, ActivityComponent, ChatComponent, BidComponent, AuctionComponent, UsersComponent,
         LoginComponent, PlayersComponent, SpinnerComponent, AppComponent, AdminComponent, TeamsComponent, UserDetailsComponent
     ],
-    providers: [WebSocketService, AuthService, LoggedInGuard, UsersService, BaseService, AuctionService, TeamsService, PlayersService],
+    providers: [
+        WebSocketService, AuthService, LoggedInGuard, UsersService, BaseService, AuctionService, TeamsService,
+        PlayersService, EvenSourcingService],
     bootstrap: [AppComponent]
 })
 export class AppModule {
