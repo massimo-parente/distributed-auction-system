@@ -120,11 +120,11 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
   }
 
   def getTeams() = Action.async {
-    db.run(players.map(_.team).distinct.result).map(teams => Ok(Json.toJson(teams)))
+    db.run(players.map(_.userTeam).distinct.result).map(teams => Ok(Json.toJson(teams)))
   }
 
-  def getPlayers(team: String) = Action.async {
-    db.run(players.filter(_.team === team).result).map(players => Ok(Json.toJson(players)))
+  def getPlayers(userTeam: String) = Action.async {
+    db.run(players.filter(_.userTeam === userTeam).result).map(players => Ok(Json.toJson(players)))
   }
 
   def getAllPlayers() = Action.async {
@@ -141,8 +141,7 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
     val bufferedSource = Source.fromString(payload)
     for (line <- bufferedSource.getLines) {
       val cols = line.split(",").map(_.trim)
-      playerRepo.addPlayer(new Player(cols(0), cols(1), 0, cols(2), "max"))
-      //println(s"${cols(0)}|${cols(1)}|${cols(2)}}")
+      playerRepo.addPlayer(new Player(cols(0), cols(1), 0, cols(2), None, None))
     }
     bufferedSource.close
   }

@@ -9,12 +9,8 @@ import {AuthService} from "./auth.service";
             <div class="panel-heading">Admin</div>
             <div class="panel-body">
                 <div class="row">
-                    <div class="col-md-4">                    
-                        <button type="button" class="btn btn-primary" (click)="startAuction()">Start Auction</button>
-                    </div>
-                    <div class="col-md-4">                    
-                        <button type="button" class="btn btn-primary" (click)="abortAuction()">Abort Auction</button>
-                    </div>
+                    <button type="button" class="btn btn-primary" (click)="startAuction()">Start Auction</button>
+                    <button type="button" class="btn btn-primary" (click)="abortAuction()">Abort Auction</button>
                 </div>
             </div>
         </div>
@@ -33,6 +29,6 @@ export class AdminComponent {
     }
 
     showPanel() {
-        return this.authService.loggedUser().role == "admin"
+        return this.authService.isAdminLogged()
     }
 }

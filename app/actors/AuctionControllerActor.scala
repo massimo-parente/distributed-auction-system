@@ -143,6 +143,8 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository,
 
   var subscribers: Map[ActorRef, String] = Map.empty
 
+  //eventRepo.add(models.Event(null, null, true))
+
   startWith(Closed, AuctionData())
 
   when(Closed) {

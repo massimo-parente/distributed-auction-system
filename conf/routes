@@ -29,7 +29,7 @@ GET     /users/:name                    controllers.HomeController.getUser(name:
 
 GET     /teams                          controllers.HomeController.getTeams()
 
-GET     /players/:team                  controllers.HomeController.getPlayers(team: String)
+GET     /players/:userTeam              controllers.HomeController.getPlayers(userTeam: String)
 
 GET     /players                        controllers.HomeController.getAllPlayers()
 

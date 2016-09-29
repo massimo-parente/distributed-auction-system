@@ -49,4 +49,8 @@ export class AuthService {
     loggedUser() {
         return this.user
     }
+
+    isAdminLogged() {
+        return this.loggedIn && this.user.role == "admin"
+    }
 }

@@ -1,31 +1,61 @@
-import {Component} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {PlayersService} from "./players.service";
+import {AuthService} from "./auth.service";
 
 @Component({
     selector: 'players',
     template: `
-        <div class="panel panel-primary">
+        <div class="panel panel-primary" *ngIf="showUpload()">
             <div class="panel-heading">Upload players</div>
             <div class="panel-body">
-                <textarea [(ngModel)]="players"></textarea>
-                <button class="btn btn-primary" (click)="upload()">Upload</button>
+                <div class="container-fluid">
+                    <textarea [(ngModel)]="uploadCSV" style="width: 100%"></textarea>
+                </div>
+                <div class="container-fluid">
+                    <button class="btn btn-primary" (click)="upload()">Upload</button>
+                </div>
             </div>
         </div>
+        <h1>Players</h1>
+        <table class="table table-condensed">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Value</th>
+                    <th>Fanta Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let player of players">
+                    <td>{{ player.name }}</td>
+                    <td>{{ player.role }}</td>
+                    <td>{{ player.value }}</td>
+                    <td>{{ player.userTeam }}</td>
+                </tr>
+            </tbody>
+        </table>
     `
 })
-export class PlayersComponent {
+export class PlayersComponent implements OnInit {
 
-    players: string
+    uploadCSV: string
+    players: any
 
-    constructor(private playersService: PlayersService) {
+    constructor(private playersService: PlayersService, private authService: AuthService) {}
+
+    ngOnInt() {
+        this.playersService.getPlayers().subscribe(
+            (players:any) => this.players = players)
     }
 
     upload() {
-        this.playersService.upload(this.players).subscribe(() => {})
+        this.playersService.upload(this.uploadCSV).subscribe(() => {})
     }
 
-    //onChange file listener
-    changeListener($event): void {
-        //this.files = $event.target
+    showUpload() {
+        return this.authService.isAdminLogged()
+
     }
+
 }

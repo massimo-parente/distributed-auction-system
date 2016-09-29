@@ -14,7 +14,7 @@ case object UserRoles {
   val BIDDER = "bidder"
 }
 
-case class User(name: String, role: String, budget: Int)
+case class User(name: String, teamName: String, role: String, budget: Int)
 
 object Users {
   implicit val usersFormat = Json.format[User]
@@ -22,12 +22,10 @@ object Users {
 
 class Users(tag: Tag) extends Table[User](tag, "USERS") {
   def name: Rep[String] = column[String]("NAME", O.PrimaryKey)
-
+  def teamName: Rep[String] = column[String]("TEAM_NAME", O.PrimaryKey)
   def role: Rep[String] = column[String]("ROLE")
-
   def budget: Rep[Int] = column[Int]("BUDGET")
-
-  def * = (name, role, budget) <> (User.tupled, User.unapply)
+  def * = (name, teamName, role, budget) <> (User.tupled, User.unapply)
 }
 
 trait UserRepository {
