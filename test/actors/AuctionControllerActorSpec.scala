@@ -25,6 +25,7 @@ class AuctionControllerActorSpec extends TestKit(ActorSystem("TestSystem"))
   val dbConfig = Injector.inject[DatabaseFixturesConfig]
   val userRepo = Injector.inject[UserRepositoryImpl]
   val playerRepo = Injector.inject[PlayerRepositoryImpl]
+  val eventRepo = Injector.inject[EventRepositoryImpl]
 
   override def afterAll {
     TestKit.shutdownActorSystem(system)
@@ -33,7 +34,7 @@ class AuctionControllerActorSpec extends TestKit(ActorSystem("TestSystem"))
   "An AuctionControllerActor" must {
 
     "can cycle auctioneers" in {
-      val ref = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo))
+      val ref = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo, eventRepo))
       val shift: Seq[Int] => Seq[Int] = ref.underlyingActor.shiftLeft
 
       val s = Seq(1, 2, 3)
@@ -51,7 +52,7 @@ class AuctionControllerActorSpec extends TestKit(ActorSystem("TestSystem"))
         }
       }
 
-      val actor = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo))
+      val actor = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo, eventRepo))
       actor ! Subscribe("me")
       expectMsg(Subscribed("me"))
       assert(actor.underlyingActor.subscribers.size == 1)
@@ -76,7 +77,7 @@ class AuctionControllerActorSpec extends TestKit(ActorSystem("TestSystem"))
 
     "run full auction" in {
 
-      val actor = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo))
+      val actor = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo, eventRepo))
 
       actor ! Subscribe("me")
       expectMsg(Subscribed("me"))
@@ -130,7 +131,7 @@ class AuctionControllerActorSpec extends TestKit(ActorSystem("TestSystem"))
 
     "reject invalid state transitions" in {
 
-      val actor = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo))
+      val actor = TestFSMRef(new AuctionControllerActor(userRepo, playerRepo, eventRepo))
 
       // initial status
       assert(actor.stateName == Closed)

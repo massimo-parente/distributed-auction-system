@@ -12,19 +12,19 @@ export class UsersService  extends BaseService {
 
     getUsers(){
         return this._http.get("/users", this.getRequestOptions())
-            .map(res => res.json())
+            .map((res:any) => res.json())
     }
 
-    getUser(id){
+    getUser(id: any){
         return this._http.get("users/" + id, this.getRequestOptions())
-            .map(res => res.json())
+            .map((res:any) => res.json())
     }
 
-    addUser(user){
+    addUser(user: any){
         return this._http.post("/users/add", JSON.stringify(user), this.getRequestOptions())
     }
 
-    updateUser(user) {
+    updateUser(user: any) {
         return this._http.put(
             "/users/update/" + user.name + "/" + user.role + "/" + user.budget,
             JSON.stringify(user),
@@ -32,7 +32,7 @@ export class UsersService  extends BaseService {
         )
     }
 
-    deleteUser(id){
+    deleteUser(id: any){
         return this._http.delete("/users/delete/" + id, this.getRequestOptions())
     }
 }

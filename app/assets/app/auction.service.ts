@@ -8,7 +8,7 @@ import {EvenSourcingService} from "./event-sourcing.service";
 @Injectable()
 export class AuctionService {
 
-    private auctionStatus = ""
+    private auctionStatus = "auction-closed"
     private auctioneer = ""
     private highestBid = {bidder: "", player: "", value: 0}
     private pendingBidders = new Array<string>()
@@ -20,7 +20,13 @@ export class AuctionService {
         private http: Http) {
 
         this.eventSourcingService.getEvent().subscribe(
-            events => events.forEach(e => this.handle(JSON.parse(e))),
+            events => {
+                try {
+                    events.forEach(e => this.handle(JSON.parse(e)))
+                } catch(e) {
+                    console.log(e)
+                }
+            },
             err => console.log(err),
             () => this.webSocketService.messages.subscribe((msg: any) => this.handle(msg))
         )
@@ -51,6 +57,7 @@ export class AuctionService {
                 break
             case "auction-joined":
                 this.pushMessage(msg.sender + " has joined the auction for " + msg.player)
+                this.pushMessage("Pending bidders: " + msg.pendingBidders)
                 break
             case "auction-opened":
                 this.pushMessage("All bidders have joined. Auction is on!!!")
@@ -72,6 +79,10 @@ export class AuctionService {
                 break
             case "auction-completed":
                 this.pushMessage(msg.bid.bidder + " has signed " + msg.bid.player + " for " + msg.bid.value)
+                break
+            case "auction-terminated":
+                this.pushMessage("The auction has been terminated by admin")
+                this.auctionStatus = msg.messageType
                 break
             default:
                 // skip

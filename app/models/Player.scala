@@ -12,7 +12,7 @@ import scala.concurrent.Future
 /**
   * Created by mparente on 20/09/2016.
   */
-case class Player(name: String, role: String, value: Int, team: String, user: Option[String], userTeam: Option[String])
+  case class Player(name: String, role: String, value: Int, team: String, user: Option[String])
 
 object Players {
   implicit val playersFormat = Json.format[Player]
@@ -23,9 +23,8 @@ class Players(tag: Tag) extends Table[Player](tag, "PLAYERS") {
   def role: Rep[String] = column[String]("ROLE")
   def value: Rep[Int] = column[Int]("VALUE")
   def team: Rep[String] = column[String]("TEAM")
-  def user: Rep[String] = column[String]("USER")
-  def userTeam: Rep[String] = column[String]("USER_TEAM")
-  def * = (name, role, value, team, user.?, userTeam.?) <> (Player.tupled, Player.unapply)
+  def user: Rep[String] = column[String]("USER" )
+  def * = (name, role, value, team, user.?) <> (Player.tupled, Player.unapply)
 }
 
 

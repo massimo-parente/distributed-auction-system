@@ -28,26 +28,28 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-testkit" % "2.4.9" % "test",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
 
-    "org.webjars" % "bootstrap" % "4.0.0-alpha.3",
+    "org.reactivecouchbase" %% "reactivecouchbase-play" % "0.3",
+
+    "org.webjars" % "bootstrap" % "3.3.7",
     "org.webjars" % "flot" % "0.8.0",
-    "org.webjars.npm" % "angular__common" % "2.0.0-rc.6",
-    "org.webjars.npm" % "angular__compiler" % "2.0.0-rc.6",
-    "org.webjars.npm" % "angular__core" % "2.0.0-rc.6",
-    "org.webjars.npm" % "angular__platform-browser-dynamic" % "2.0.0-rc.6",
-    "org.webjars.npm" % "angular__platform-browser" % "2.0.0-rc.6",
-    "org.webjars.npm" % "angular__http" % "2.0.0-rc.6",
-    "org.webjars.npm" % "angular__router" % "3.0.0-rc.2",
-    "org.webjars.npm" % "angular__forms" % "2.0.0-rc.6",
-    "org.webjars.npm" % "systemjs" % "0.19.31",
+    "org.webjars.npm" % "angular__common" % "2.0.1",
+    "org.webjars.npm" % "angular__compiler" % "2.0.1",
+    "org.webjars.npm" % "angular__core" % "2.0.1",
+    "org.webjars.npm" % "angular__platform-browser-dynamic" % "2.0.1",
+    "org.webjars.npm" % "angular__platform-browser" % "2.0.1",
+    "org.webjars.npm" % "angular__http" % "2.0.1",
+    "org.webjars.npm" % "angular__router" % "3.0.1",
+    "org.webjars.npm" % "angular__forms" % "2.0.1",
+    "org.webjars.npm" % "systemjs" % "0.19.39",
     "org.webjars.npm" % "todomvc-common" % "1.0.2",
-    "org.webjars.npm" % "rxjs" % "5.0.0-beta.11",
+    "org.webjars.npm" % "rxjs" % "5.0.0-beta.12",
     "org.webjars.npm" % "es6-promise" % "3.1.2",
     "org.webjars.npm" % "es6-shim" % "0.35.1",
-    "org.webjars.npm" % "reflect-metadata" % "0.1.3",
-    "org.webjars.npm" % "zone.js" % "0.6.12",
-    "org.webjars.npm" % "core-js" % "2.4.0",
+    "org.webjars.npm" % "reflect-metadata" % "0.1.8",
+    "org.webjars.npm" % "zone.js" % "0.6.25",
+    "org.webjars.npm" % "core-js" % "2.4.1",
     "org.webjars.npm" % "symbol-observable" % "1.0.1",
-    "org.webjars.npm" % "typescript" % "2.0.0-dev.20160707",
+    "org.webjars.npm" % "typescript" % "2.0.2",
 
     //tslint dependency
     "org.webjars.npm" % "tslint-eslint-rules" % "1.2.0",
@@ -58,6 +60,9 @@ libraryDependencies ++= {
     //  "org.webjars.npm" % "jasmine-core" % "2.4.1"
   )
 }
+
+resolvers += "ReactiveCouchbase" at "https://raw.github.com/ReactiveCouchbase/repository/master/releases"
+
 dependencyOverrides += "org.webjars.npm" % "minimatch" % "3.0.0"
 
 // the typescript typing information is by convention in the typings directory

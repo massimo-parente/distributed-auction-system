@@ -12,12 +12,12 @@ export class TeamsService  extends BaseService {
 
     getTeams() {
         return this._http.get("/teams", this.getRequestOptions())
-            .map(res => res.json())
+            .map((res:any) => res.json())
     }
 
     getPlayers(team: string) {
         return this._http.get("/players/" + team, this.getRequestOptions())
-            .map(res => res.json())
+            .map((res:any) => res.json())
     }
 
 

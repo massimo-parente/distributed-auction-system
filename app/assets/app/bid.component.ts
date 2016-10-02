@@ -10,10 +10,15 @@ import {AuthService} from "./auth.service";
         <div class="panel panel-primary">
             <div class="panel-heading">Auction</div>
             <div class="panel-body">
-                <div *ngIf="isAwaitingBidders()" class="row">
-                    <div class="col-md-12">
-                        <spinner></spinner><span><h3>Waiting for bidders to join auction</h3></span>
-                    </div>
+                <div *ngIf="isAwaitingInit()">
+                    <h4><span class="text-info">Awaiting users</span></h4>
+                </div>
+                <div *ngIf="isAwaitingCall()">
+                    <h4><span class="text-info">Awaiting call</span></h4>
+                </div>
+                <div *ngIf="isAwaitingBidders()">                    
+                    <spinner></spinner>
+                    <h4><span class="text-info">Awaiting bidders</span></h4>                    
                 </div>
                 <div class="form-group" *ngIf="isPendingJoinAuction()">
                     <button type="button" class="btn btn-primary" (click)="joinAuction()">Join Bid</button>
@@ -66,6 +71,16 @@ export class BidComponent implements OnInit {
         let pendingBidders = this.auctionService.getPendingBidders()
         let loggedUser = this.authService.loggedUser().name
         return pendingBidders.indexOf(loggedUser) > -1
+    }
+
+    isAwaitingInit() {
+        return this.auctionService.getAuctionStatus() == "auction-closed" ||
+            this.auctionService.getAuctionStatus() == "auction-terminated"
+    }
+
+    isAwaitingCall() {
+        return this.auctionService.getAuctionStatus() == "auction-initialised" &&
+                this.auctionService.getAuctioneer() != this.authService.loggedUser().name
     }
 
     isPendingJoinAuction() {

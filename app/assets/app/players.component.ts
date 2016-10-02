@@ -9,7 +9,8 @@ import {AuthService} from "./auth.service";
             <div class="panel-heading">Upload players</div>
             <div class="panel-body">
                 <div class="container-fluid">
-                    <textarea [(ngModel)]="uploadCSV" style="width: 100%"></textarea>
+                    <textarea [(ngModel)]="uploadCSV" style="width: 100%" 
+                              placeholder="name, role [P,D,C,A], team"></textarea>
                 </div>
                 <div class="container-fluid">
                     <button class="btn btn-primary" (click)="upload()">Upload</button>
@@ -23,6 +24,7 @@ import {AuthService} from "./auth.service";
                     <th>Name</th>
                     <th>Role</th>
                     <th>Value</th>
+                    <th>Team</th>
                     <th>Fanta Team</th>
                 </tr>
             </thead>
@@ -31,6 +33,7 @@ import {AuthService} from "./auth.service";
                     <td>{{ player.name }}</td>
                     <td>{{ player.role }}</td>
                     <td>{{ player.value }}</td>
+                    <td>{{ player.team }}</td>
                     <td>{{ player.userTeam }}</td>
                 </tr>
             </tbody>
@@ -44,9 +47,10 @@ export class PlayersComponent implements OnInit {
 
     constructor(private playersService: PlayersService, private authService: AuthService) {}
 
-    ngOnInt() {
+    ngOnInit() {
         this.playersService.getPlayers().subscribe(
-            (players:any) => this.players = players)
+            players => this.players = players
+        )
     }
 
     upload() {

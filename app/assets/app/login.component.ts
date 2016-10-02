@@ -25,8 +25,7 @@ export class LoginComponent {
     login() {
         this.authService.login(this.username).subscribe(
             user => {
-                let redirect = this.authService.redirectUrl ? this.authService.redirectUrl : "home"
-                this.router.navigate([redirect])
+                this.router.navigate(['home'])
             },
             err => {
                 this.errorMessage = <any>err

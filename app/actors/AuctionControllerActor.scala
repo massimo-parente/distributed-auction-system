@@ -19,30 +19,19 @@ object AuctionControllerActor {
   sealed trait AuctionState
 
   case object Closed extends AuctionState
-
   case object AwaitingCall extends AuctionState
-
   case object AwaitingBidders extends AuctionState
-
   case object InProgress extends AuctionState
-
   case object Complete extends AuctionState
-
   case class ResolveUserNames(sender: ActorRef, users: Seq[String])
-
   case class ResolveBudget(sender: ActorRef, budget: Int)
 
   // internal messages
   case class Subscribe(name: String)
-
   case class UnSubscribe(name: String)
-
   case object InitAuction
-
   case object AbortAuction
-
   case class Tick(sender: ActorRef)
-
   case object GetStatus
 
   object MessageType {
@@ -61,6 +50,7 @@ object AuctionControllerActor {
     val SUBSCRIBED = "subscribed"
     val UNSUBSCRIBED = "unsubscribed"
     val COMMAND_REJECTED = "command-rejected"
+    val AUCTION_TERMINATED = "auction-terminated"
   }
 
   import MessageType._
@@ -83,7 +73,9 @@ object AuctionControllerActor {
   case class AuctionCompleted(bid: Bid, messageType: String = AUCTION_COMPLETED) extends AuctionMessage
   case class Subscribed(user: String, messageType: String = SUBSCRIBED) extends AuctionMessage
   case class UnSubscribed(user: String, messageType: String = UNSUBSCRIBED) extends AuctionMessage
-  case class CommandRejected(command: AuctionMessage, reason: String, messageType: String = COMMAND_REJECTED)
+  case class CommandRejected(command: AuctionMessage, reason: String, messageType: String = COMMAND_REJECTED) extends AuctionMessage
+  case class AuctionTerminated(messageType: String = AUCTION_TERMINATED) extends AuctionMessage
+
   case class AuctionData(auctioneers: Seq[String] = Seq.empty,
                          pendingBidders: Seq[String] = Seq.empty,
                          currentBid: Bid = null,
@@ -112,6 +104,16 @@ object AuctionControllerActor {
   implicit val tickedFormat = Json.format[Ticked]
   implicit val subscribedFormat = Json.format[Subscribed]
   implicit val unSubscribedFormat = Json.format[UnSubscribed]
+  implicit val auctionTerminatedFormat = Json.format[AuctionTerminated]
+  implicit val commandRejectedWrites = new Writes[CommandRejected] {
+    override def writes(o: CommandRejected): JsValue = {
+      Json.obj(
+        "command" -> o.command.toJson(),
+        "reason" -> o.reason,
+        "messageTyep" -> o.messageType
+      )
+    }
+  }
 
   implicit class AuctionMessageToJson(m: AuctionMessage) {
     def toJson(): JsValue = m match {
@@ -126,7 +128,8 @@ object AuctionControllerActor {
       case m: AuctionCompleted => Json.toJson(m)
       case m: Subscribed => Json.toJson(m)
       case m: UnSubscribed => Json.toJson(m)
-      //case m: CommandRejected => Json.toJson(m)
+      case m: CommandRejected => Json.toJson(m)
+      case m: AuctionTerminated => Json.toJson(m)
     }
   }
 
@@ -142,8 +145,6 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository,
   extends Actor with LoggingFSM[AuctionState, AuctionData] {
 
   var subscribers: Map[ActorRef, String] = Map.empty
-
-  //eventRepo.add(models.Event(null, null, true))
 
   startWith(Closed, AuctionData())
 
@@ -234,6 +235,7 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository,
       subscribers -= actor
       stay()
     case Event(AbortAuction, data) =>
+      broadcast(AuctionTerminated())
       goto(Closed) using (AuctionData(data.auctioneers))
     case Event(c@Chat(sender, message, _), _) =>
       broadcast(c)
@@ -242,6 +244,8 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository,
       val error = s"Message $message cannot be handel in state: $stateName"
       log.warning(error)
       stay()
+    case Event(GetStatus, _) =>
+      stay() replying(stateName)
   }
 
   def persistEvent(msg: AuctionMessage, savePoint: Boolean) = {
@@ -252,6 +256,7 @@ class AuctionControllerActor @Inject()(userRepo: UserRepository,
   def broadcast(msg: AuctionMessage) = {
     msg match {
       case m: AuctionInitialised => persistEvent(m, true)
+      case m: AuctionTerminated => persistEvent(m, true)
       case m: Subscribe => // don't persist
       case m: UnSubscribe => // don't persist
       case other => persistEvent(other, false)

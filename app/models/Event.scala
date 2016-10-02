@@ -8,13 +8,13 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class Event(id: Option[Int], event: String, savePoint: Boolean)
+case class Event(id: Option[Int], payload: String, savePoint: Boolean)
 
 class Events(tag: Tag) extends Table[Event](tag, "EVENTS") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
-  def event = column[String]("EVENT")
+  def payload = column[String]("PAYLOAD")
   def savePoint = column[Boolean]("SAVE_POINT")
-  def * = (id.?, event, savePoint) <> (Event.tupled, Event.unapply)
+  def * = (id.?, payload, savePoint) <> (Event.tupled, Event.unapply)
 }
 
 trait EventRepository {

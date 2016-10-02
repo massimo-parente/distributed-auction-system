@@ -29,12 +29,12 @@ class DatabaseFixturesConfig @Inject()(dbConfigProvider: DatabaseConfigProvider)
       DBIO.seq(
         users.schema.create,
         players.schema.create,
-        users += User("user1", UserRoles.ADMIN, 0),
-        users += User("user2", UserRoles.BIDDER, 0),
-        users += User("user3", UserRoles.BIDDER, 0),
-        players += Player("player1", "M", 0, "team1", "user1"),
-        players += Player("player2", "M", 0, "team2", "user2"),
-        players += Player("player3", "M", 0, "team3", "user3")
+        users += User("user1", "team1", UserRoles.ADMIN, 0),
+        users += User("user2", "team2", UserRoles.BIDDER, 0),
+        users += User("user3", "team3", UserRoles.BIDDER, 0),
+        players += Player("player1", "M", 0, "team1", Some("user1"), None),
+        players += Player("player2", "M", 0, "team2", Some("user2"), None),
+        players += Player("player3", "M", 0, "team3", Some("user3"), None)
       )
     )
   }

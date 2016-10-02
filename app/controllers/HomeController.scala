@@ -2,10 +2,12 @@ package controllers
 
 import javax.inject.{Inject, Named}
 
-import actors.AuctionControllerActor.{AbortAuction, InitAuction}
+import actors.AuctionControllerActor.{AbortAuction, AuctionMessage, AuctionState, Closed, GetStatus, InitAuction}
 import actors.WebSocketActor
 import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
 import akka.stream.Materializer
+import akka.util.Timeout
 import config.DatabaseConfig
 import models.{EventRepository, Player, PlayerRepository, User}
 import play.api.libs.json._
@@ -15,15 +17,19 @@ import slick.driver.H2Driver.api._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.io.Source
 
 class HomeController @Inject()(@Named("auctionControllerActor") auctionControllerActor: ActorRef,
                                dbConfig: DatabaseConfig,
                                playerRepo: PlayerRepository,
                                eventRepo: EventRepository)
-                              (implicit system: ActorSystem, materializer: Materializer) extends Controller {
+                              (implicit system: ActorSystem, materializer: Materializer)
+  extends Controller { //with CouchbaseController {
 
   private val logger = org.slf4j.LoggerFactory.getLogger("controllers.Application")
+
+//  implicit val couchbaseExecutionContext = PlayCouchbase.couchbaseExecutor
 
   import dbConfig._
   import models.Users._
@@ -81,9 +87,16 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
   }
 
   def events = Action.async {
-    eventRepo.findFromLatestSavePoint()
-      .map(events => events.map(e => Json.toJson(e.event)))
-      .map(events => Ok(Json.toJson(events)))
+    implicit val timeout = Timeout(10 seconds)
+    (auctionControllerActor ? GetStatus)
+      .flatMap {
+        case Closed =>
+          Future.successful(Ok(Json.toJson("")))
+        case _ =>
+          eventRepo.findFromLatestSavePoint()
+            .map(_.map(e => Json.toJson(e.payload)))
+            .map(events => Ok(Json.toJson(events)))
+      }
   }
 
   def addUser() = Action.async(BodyParsers.parse.json) { implicit request =>
@@ -120,11 +133,11 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
   }
 
   def getTeams() = Action.async {
-    db.run(players.map(_.userTeam).distinct.result).map(teams => Ok(Json.toJson(teams)))
+    db.run(players.map(_.user).distinct.result).map(teams => Ok(Json.toJson(teams)))
   }
 
-  def getPlayers(userTeam: String) = Action.async {
-    db.run(players.filter(_.userTeam === userTeam).result).map(players => Ok(Json.toJson(players)))
+  def getPlayers(user: String) = Action.async {
+    db.run(players.filter(_.user === user).result).map(players => Ok(Json.toJson(players)))
   }
 
   def getAllPlayers() = Action.async {
@@ -141,9 +154,24 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
     val bufferedSource = Source.fromString(payload)
     for (line <- bufferedSource.getLines) {
       val cols = line.split(",").map(_.trim)
-      playerRepo.addPlayer(new Player(cols(0), cols(1), 0, cols(2), None, None))
+      playerRepo.addPlayer(new Player(cols(0), cols(1), 0, cols(2), None))
     }
     bufferedSource.close
   }
 
+//  // Usage of CouchbaseAction
+//  def getUser(key: String) = CouchbaseAction("default") { bucket =>
+//    bucket.get[JsObject](key).map { maybeUser =>
+//      maybeUser
+//        .map(user => Ok(user))
+//        .getOrElse(BadRequest(s"Unable to find user with key: $key"))
+//    }
+//  }
+//
+//  // Usage of N1QL plugin
+//  def findUserByEmail(email: String) = CouchbaseAction("default") { implicit bucket =>
+//    N1QL( s""" SELECT id, name, email FROM default WHERE email = '${email}' """ ).toList[User].map { users =>
+//      Ok(users.mkString(" | "))
+//    }
+//  }
 }

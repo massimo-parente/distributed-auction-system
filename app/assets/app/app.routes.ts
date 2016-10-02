@@ -10,7 +10,7 @@ import {UserDetailsComponent} from "./user-details.component";
 
 
 export const appRoutes: Routes = [
-    { path: "", component: AuctionComponent, canActivate: [LoggedInGuard] },
+    { path: "", redirectTo: "/home", pathMatch: "full" },
     { path: "home", component: AuctionComponent, canActivate: [LoggedInGuard] },
     { path: "login", component: LoginComponent},
     { path: "teams", component: TeamsComponent},

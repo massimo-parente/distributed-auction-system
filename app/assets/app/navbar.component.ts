@@ -5,25 +5,26 @@ import {AuthService} from "./auth.service"
 @Component({
     selector: "navbar",
     template: `
-        <nav class="navbar navbar-default">
-          <div class="container-fluid">
-            <div class="navbar-header">
-              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" [routerLink]="['home']">Fantapesce Distributed Auction System</a>
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                <a class="navbar-brand" [routerLink]="['home']">Fantapesce Distributed Auction System</a>
             </div>
-            <div class="collapse navbar-collapse" id="myNavbar" *ngIf="authService.isLoggedIn()">
+            <div id="navbar" class="navbar-collapse collapse" *ngIf="authService.isLoggedIn()">
               <ul class="nav navbar-nav">
-                <li class="active"><a [routerLink]="['home']">Home</a></li>
-                <li class="active"><a [routerLink]="['teams']">Teams</a></li>
-                <li class="active"><a [routerLink]="['players']">Players</a></li>
-                <li class="active"><a [routerLink]="['users']">Users</a></li>
+                <li [routerLinkActive]="['active']"><a [routerLink]="['home']">Home</a></li>
+                <li [routerLinkActive]="['active']"><a [routerLink]="['teams']">Teams</a></li>
+                <li [routerLinkActive]="['active']"><a [routerLink]="['players']">Players</a></li>
+                <li [routerLinkActive]="['active']"><a [routerLink]="['users']">Users</a></li>
               </ul>
               <ul class="nav navbar-nav navbar-right">
-                  <li class="navbar-text" style="color: white">
+                  <li class="nav-item navbar-text" style="color: white">
                     <span class="glyphicon glyphicon-user" id="icon-user"></span> {{authService.loggedUser().name}}
                   </li>                        
                   <li>
