@@ -48,8 +48,9 @@ export class TeamsComponent implements OnInit {
     getTeams() {
         this.teamsService.getTeams()
             .subscribe((teams) => {
-                teams.map((team) =>
-                    this.getPlayers(team))
+                teams.map((team) => {
+                    this.getPlayers(team.name)
+                })
             })
     }
 

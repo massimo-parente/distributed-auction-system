@@ -1,21 +1,22 @@
 import {Component} from "@angular/core"
 import {UsersService} from "./users.service";
+import {AuthService} from "./auth.service";
 
 @Component({
     selector: "users",
     template: `
         <h1>Users</h1>
-        <div class="form-group">
+        <div class="form-group" *ngIf="authService.isAdminLogged()">
             <a role="button" class="btn btn-primary" [routerLink]="['/user-details']">Add user</a>
         </div>
-        <table class="table table-bordered">
+        <table class="table table-condensed">
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Role</th>
                     <th>Budget</th>
-                    <th>Edit</th>
-                    <th >Delete</th>
+                    <th *ngIf="authService.isAdminLogged()">Edit</th>
+                    <th *ngIf="authService.isAdminLogged()">Delete</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,10 +24,10 @@ import {UsersService} from "./users.service";
                     <td>{{ user.name }}</td>
                     <td>{{ user.role }}</td>
                     <td>{{ user.budget }}</td>
-                    <td>                        
+                    <td *ngIf="authService.isAdminLogged()">                        
                         <i class="glyphicon glyphicon-edit clickable" [routerLink]="['/user-details/', user.name]"></i>                        
                     </td>
-                    <td>
+                    <td *ngIf="authService.isAdminLogged()">
                         <i class="glyphicon glyphicon-remove clickable" (click)="delete(user)"></i>
                     </td>
                 </tr>
@@ -38,7 +39,7 @@ export class UsersComponent {
 
     users: any[]
 
-    constructor(private usersService: UsersService) {
+    constructor(private usersService: UsersService, public authService: AuthService) {
     }
 
     ngOnInit() {

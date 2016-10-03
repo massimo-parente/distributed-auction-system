@@ -50,6 +50,7 @@ libraryDependencies ++= {
     "org.webjars.npm" % "core-js" % "2.4.1",
     "org.webjars.npm" % "symbol-observable" % "1.0.1",
     "org.webjars.npm" % "typescript" % "2.0.2",
+    "org.webjars.npm" % "ng2-translate" % "2.4.3",
 
     //tslint dependency
     "org.webjars.npm" % "tslint-eslint-rules" % "1.2.0",

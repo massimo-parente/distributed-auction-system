@@ -11,16 +11,17 @@ import {AuthService} from "./auth.service";
             <div class="panel-heading">Auction</div>
             <div class="panel-body">
                 <div *ngIf="isAwaitingInit()">
-                    <h4><span class="text-info">Awaiting users</span></h4>
+                    <h4><span class="text-info">Auction is currently closed</span></h4>
                 </div>
                 <div *ngIf="isAwaitingCall()">
-                    <h4><span class="text-info">Awaiting call</span></h4>
+                    <h4><span class="text-info">Awaiting call from {{ auctionService.getAuctioneer() }}</span></h4>
                 </div>
-                <div *ngIf="isAwaitingBidders()">                    
-                    <spinner></spinner>
-                    <h4><span class="text-info">Awaiting bidders</span></h4>                    
+                <div *ngIf="isAwaitingBidders()">                                        
+                    <h4><span class="text-info">Awaiting bidders to join auction</span></h4>
+                     <spinner></spinner>
                 </div>
                 <div class="form-group" *ngIf="isPendingJoinAuction()">
+                    <h4><span class="text-info">Awaiting bidders to join auction</span></h4>
                     <button type="button" class="btn btn-primary" (click)="joinAuction()">Join Bid</button>
                 </div>
                 <div class="form-group" *ngIf="canRequestAuction()">

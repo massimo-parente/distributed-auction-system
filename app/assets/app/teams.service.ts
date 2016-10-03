@@ -16,6 +16,7 @@ export class TeamsService  extends BaseService {
     }
 
     getPlayers(team: string) {
+        console.log("team: " + team)
         return this._http.get("/players/" + team, this.getRequestOptions())
             .map((res:any) => res.json())
     }

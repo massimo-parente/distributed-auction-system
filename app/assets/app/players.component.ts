@@ -34,7 +34,7 @@ import {AuthService} from "./auth.service";
                     <td>{{ player.role }}</td>
                     <td>{{ player.value }}</td>
                     <td>{{ player.team }}</td>
-                    <td>{{ player.userTeam }}</td>
+                    <td>{{ player.user }}</td>
                 </tr>
             </tbody>
         </table>

@@ -133,7 +133,8 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
   }
 
   def getTeams() = Action.async {
-    db.run(players.map(_.user).distinct.result).map(teams => Ok(Json.toJson(teams)))
+    db.run(users.result).map(teams => Ok(Json.toJson(teams)))
+    //db.run(players.map(_.user).distinct.result).map(teams => Ok(Json.toJson(teams)))
   }
 
   def getPlayers(user: String) = Action.async {
