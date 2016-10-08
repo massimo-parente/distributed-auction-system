@@ -2,28 +2,35 @@ package models
 
 import javax.inject.Inject
 
-import play.api.db.slick.DatabaseConfigProvider
-import slick.driver.H2Driver.api._
+import com.google.inject.Singleton
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.driver.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class Event(id: Option[Int], payload: String, savePoint: Boolean)
 
-class Events(tag: Tag) extends Table[Event](tag, "EVENTS") {
-  def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
-  def payload = column[String]("PAYLOAD")
-  def savePoint = column[Boolean]("SAVE_POINT")
-  def * = (id.?, payload, savePoint) <> (Event.tupled, Event.unapply)
-}
+trait EventRepository { self: HasDatabaseConfigProvider[JdbcProfile] =>
+  import driver.api._
 
-trait EventRepository {
+  class Events(tag: Tag) extends Table[Event](tag, "EVENTS") {
+    def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+    def payload = column[String]("PAYLOAD")
+    def savePoint = column[Boolean]("SAVE_POINT")
+    def * = (id.?, payload, savePoint) <> (Event.tupled, Event.unapply)
+  }
+
   def add(event: Event): Future[Unit]
   def findFromLatestSavePoint(): Future[Seq[Event]]
 }
 
-class EventRepositoryImpl @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends EventRepository {
-  val db = dbConfigProvider.get[JdbcProfile].db
+@Singleton
+class EventRepositoryImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
+  extends EventRepository
+    with HasDatabaseConfigProvider[JdbcProfile] {
+
+  import driver.api._
+
   val events = TableQuery[Events]
 
   override def add(event: Event): Future[Unit] = {

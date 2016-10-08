@@ -28,8 +28,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-testkit" % "2.4.9" % "test",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
 
-    "org.reactivecouchbase" %% "reactivecouchbase-play" % "0.3",
-
     "org.webjars" % "bootstrap" % "3.3.7",
     "org.webjars" % "flot" % "0.8.0",
     "org.webjars.npm" % "angular__common" % "2.0.1",

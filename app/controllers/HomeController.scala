@@ -2,36 +2,30 @@ package controllers
 
 import javax.inject.{Inject, Named}
 
-import actors.AuctionControllerActor.{AbortAuction, AuctionMessage, AuctionState, Closed, GetStatus, InitAuction}
+import actors.AuctionControllerActor.{AbortAuction, Closed, GetStatus, InitAuction}
 import actors.WebSocketActor
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.util.Timeout
-import config.DatabaseConfig
-import models.{EventRepository, Player, PlayerRepository, User}
+import models._
 import play.api.libs.json._
 import play.api.libs.streams.ActorFlow
 import play.api.mvc._
-import slick.driver.H2Driver.api._
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.io.Source
 
 class HomeController @Inject()(@Named("auctionControllerActor") auctionControllerActor: ActorRef,
-                               dbConfig: DatabaseConfig,
+                               userRepo: UserRepository,
                                playerRepo: PlayerRepository,
                                eventRepo: EventRepository)
-                              (implicit system: ActorSystem, materializer: Materializer)
-  extends Controller { //with CouchbaseController {
+                              (implicit system: ActorSystem, materializer: Materializer, ec: ExecutionContext)
+  extends Controller {
 
   private val logger = org.slf4j.LoggerFactory.getLogger("controllers.Application")
 
-//  implicit val couchbaseExecutionContext = PlayCouchbase.couchbaseExecutor
-
-  import dbConfig._
   import models.Users._
   import models.Players._
 
@@ -57,9 +51,7 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
         Future.successful(BadRequest(Json.obj("message" -> JsError.toJson(errors))))
       },
       username => {
-        db.run(
-          users.filter(_.name === username).take(1).result
-        ).map(_.headOption).map {
+        userRepo.getUser(username).map {
           case Some(user) =>
             val js = Json.toJson(user)
             logger.info(username + " logged in")
@@ -105,46 +97,39 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
         Future.successful(BadRequest(Json.obj("message" -> JsError.toJson(errors))))
       },
       user => {
-        db.run(users += user)
+        userRepo.addUser(user)
           .map(_ => Ok(s"User ${user.name} created"))
       }
     )
   }
 
   def updateUser(name: String, role: String, budget: Int) = Action.async {
-    db.run(
-      users.filter(_.name === name)
-        .map(user => (user.budget, user.role))
-        .update(budget, role)
-    ).map(_ => Ok(""))
+    userRepo.updateUser(name, role, budget).map(_ => Ok(""))
   }
 
   def deleteUser(name: String) = Action.async {
-    db.run(users.filter(_.name === name).delete)
-      .map(_ => Ok(s"User $name deleted"))
+    userRepo.deleteUser(name).map(_ => Ok(s"User $name deleted"))
   }
 
   def getUsers() = Action.async {
-    db.run(users.result).map(users => Ok(Json.toJson(users)))
+    userRepo.findAll().map(users => Ok(Json.toJson(users)))
   }
 
   def getUser(name: String) = Action.async {
-    db.run(users.filter(_.name === name).take(1).result).map(_.headOption).map(user => Ok(Json.toJson(user)))
+    userRepo.getUser(name).map(user => Ok(Json.toJson(user)))
   }
 
   def getTeams() = Action.async {
-    db.run(users.result).map(teams => Ok(Json.toJson(teams)))
-    //db.run(players.map(_.user).distinct.result).map(teams => Ok(Json.toJson(teams)))
+    userRepo.findAll().map(teams => Ok(Json.toJson(teams)))
   }
 
   def getPlayers(user: String) = Action.async {
-    db.run(players.filter(_.user === user).result).map(players => Ok(Json.toJson(players)))
+    playerRepo.findPlayersOfUser(user).map(players => Ok(Json.toJson(players)))
   }
 
   def getAllPlayers() = Action.async {
-    db.run(players.result).map(players => Ok(Json.toJson(players)))
+    playerRepo.findAll().map(players => Ok(Json.toJson(players)))
   }
-
 
   def loadPlayers = Action.async { implicit request =>
     parseCSV(request.body.asText.get)
@@ -160,19 +145,4 @@ class HomeController @Inject()(@Named("auctionControllerActor") auctionControlle
     bufferedSource.close
   }
 
-//  // Usage of CouchbaseAction
-//  def getUser(key: String) = CouchbaseAction("default") { bucket =>
-//    bucket.get[JsObject](key).map { maybeUser =>
-//      maybeUser
-//        .map(user => Ok(user))
-//        .getOrElse(BadRequest(s"Unable to find user with key: $key"))
-//    }
-//  }
-//
-//  // Usage of N1QL plugin
-//  def findUserByEmail(email: String) = CouchbaseAction("default") { implicit bucket =>
-//    N1QL( s""" SELECT id, name, email FROM default WHERE email = '${email}' """ ).toList[User].map { users =>
-//      Ok(users.mkString(" | "))
-//    }
-//  }
 }
