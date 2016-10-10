@@ -21,10 +21,8 @@ export class AuctionService {
 
         this.eventSourcingService.getEvent().subscribe(
             events => {
-                try {
+                if (events) {
                     events.forEach(e => this.handle(JSON.parse(e)))
-                } catch(e) {
-                    console.log(e)
                 }
             },
             err => console.log(err),
