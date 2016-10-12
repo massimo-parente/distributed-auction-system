@@ -13,11 +13,11 @@ export const appRoutes: Routes = [
     { path: "", redirectTo: "/home", pathMatch: "full" },
     { path: "home", component: AuctionComponent, canActivate: [LoggedInGuard] },
     { path: "login", component: LoginComponent},
-    { path: "teams", component: TeamsComponent},
-    { path: "players", component: PlayersComponent},
-    { path: "users", component: UsersComponent},
-    { path: "user-details", component: UserDetailsComponent},
-    { path: "user-details/:id", component: UserDetailsComponent},
+    { path: "teams", component: TeamsComponent, canActivate: [LoggedInGuard]},
+    { path: "players", component: PlayersComponent, canActivate: [LoggedInGuard]},
+    { path: "users", component: UsersComponent, canActivate: [LoggedInGuard]},
+    { path: "user-details", component: UserDetailsComponent, canActivate: [LoggedInGuard]},
+    { path: "user-details/:id", component: UserDetailsComponent, canActivate: [LoggedInGuard]},
 ]
 
 export const routing: ModuleWithProviders = RouterModule.forRoot(appRoutes);
